@@ -34,7 +34,7 @@ client.on('sound_effect', function(packet) {
 
 client.on('window_items', function(packet) {
     try {
-        if(packet.items[Player.heldItemIndex].itemId == 622){
+        if(packet.items[Player.heldItemIndex].itemId == 346){
             console.log('已持有鱼竿');
             return;
         }else{
@@ -46,7 +46,7 @@ client.on('window_items', function(packet) {
     var haveFishrod = false;
     packet.items.every(function(item, index){
         if(item.present != false){
-            if(item.itemId == 622){
+            if(item.itemId == 346){
                 client.write('window_click', {
                     windowId: packet.windowId,
                     slot: index,
@@ -83,6 +83,29 @@ client.on('login', function(packet) {
         }
     }, 1000);
 });
+
+ client.on('kick_disconnect', function (packet) {
+    console.info(color('Kicked for ' + packet.reason, 'blink+red'));
+    process.exit(1);
+ });
+  
+  
+ client.on('disconnect', function (packet) {
+    console.log('[' + new Date + ']' + 'disconnected: ' + packet.reason)
+    process.exit(1);
+ });
+  
+ client.on('end', function () {
+    console.log('[' + new Date + ']' + 'Connection lost')
+    process.exit(1);
+ });
+  
+ client.on('error', function (err) {
+    console.log('[' + new Date + ']' + 'Error occured');
+    console.log(err);
+    process.exit(1);
+ });
+
 
 class Do {
     static getDistance(x1, y1, z1, x2, y2, z2) {
