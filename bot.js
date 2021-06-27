@@ -2,6 +2,9 @@ var mc = require('minecraft-protocol');
 const { threadId } = require('worker_threads');
 var config = require('./config');
 
+var firstlogin = true;
+var loginhealth = 0;
+
 var client = mc.createClient({
     host: config.server_host,
     port: config.server_port,
@@ -68,7 +71,7 @@ client.on('window_items', function(packet) {
 });
 client.on('held_item_slot', function(packet){
     Player.heldItemIndex = packet.slot + 36;
-})
+});
 
 client.on('login', function(packet) {
     console.log(Do.getTime() + '[FishBot]已加入游戏');
@@ -86,6 +89,28 @@ client.on('login', function(packet) {
         }
     }, 1000);
 });
+
+client.on('update_health', function (packet) {
+    console.log(Do.getTime());
+    console.log(packet);
+    if (firstlogin){
+        loginhealth = packet.health;
+        firstlogin = false;
+    }
+    
+    if (packet.health < 10){
+        if (packet.health >= loginhealth){
+            console.log(Do.getTime() + "在恢复");
+        }
+        else{
+            process.exit(0);//血量小于10但没在恢复 退出
+        }
+        if (packet.health < 5){
+            process.exit(0);//血量小于5 过于危险 退出
+        }
+    }
+    
+  })
 
  client.on('kick_disconnect', function (packet) {
     console.info(color('Kicked for ' + packet.reason, 'blink+red'));
