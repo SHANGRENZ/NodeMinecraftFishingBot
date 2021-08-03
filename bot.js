@@ -141,7 +141,8 @@ class Do {
     }
 	
 	static getTime() {
-		return '[' + new Date + ']';
+        var now = new Date();
+		return '[' + now.getFullYear() + '/' + ( now.getMonth() + 1 ) + '/' + now.getDay() + ' ' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds() + '] ';
 	}
 }
 
