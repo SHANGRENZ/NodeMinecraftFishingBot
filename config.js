@@ -3,11 +3,14 @@ var server_host = 'serverhost';//服务器地址
 var server_port = 25565;//服务器端口
 var username = 'youremail';//账号邮箱
 var password = 'password';//账号密码
+//var auth = 'mojang';
+var auth = 'microsoft';
 
 exports.server_host = server_host;
 exports.server_port = server_port;
 exports.username = username;
 exports.password = password;
+exports.auth = auth;
 
 ////////////
 
