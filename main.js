@@ -2,7 +2,6 @@ const mineflayer = require('mineflayer');
 const config = require('./config');
 var firstLogin = true;
 var loginHealth = 0;
-var haveChangedFishingRod = false;
 
 
 const bot = mineflayer.createBot({
@@ -19,6 +18,7 @@ function init(){
 
 bot.once('spawn',init());
 */
+
 bot.on('hardcodedSoundEffectHeard', function(soundId, soundCategory, position, volume, pitch) {   
     if(soundId == 369){//咬钩
 		var sound_distance = (Do.getDistance(position.x, position.y, position.z, Player.fishrod_x, Player.fishrod_y, Player.fishrod_z) / 8).toFixed(2);
@@ -44,46 +44,30 @@ bot.on('hardcodedSoundEffectHeard', function(soundId, soundCategory, position, v
         }
     }
 }); 
-bot.on('window_items', function(packet) {
-    if(haveChangedFishingRod == false){
-        try {
-            if(packet.items[Player.heldItemIndex].itemId == 797){ //1.15.2为622
-                Do.log('[FishBot]Holding fishing rod');
-                haveChangedFishingRod = true;
-                return;
-            }else{
-                Do.log('[FishBot]Changing to fishing rod');
-            }
-        } catch (error) {
-            Do.log('[FishBot]Changing to fishing rod');
-        }
-        var haveFishrod = false;
-        packet.items.every(function(item, index){
-            if(item.present != false){
-                if(item.itemId == 797){
-                    bot.write('window_click', {
-                        windowId: packet.windowId,
-                        slot: index,
-                        mouseButton: 0,
-                        action: 1,
-                        mode: 2,
-                        item
-                    });
-                    haveFishrod = true;
-                    return false;//break
-                }
-            }
-            return true;
-        });
-        haveFishrod ? Do.log('[FishBot]Having changed item to fishing rod') : Do.log('[FishBot]Warning! No fishing rod in inventory');
-        haveChangedFishingRod = true;
+bot.once('spawn', async function() {
+    var window = bot.inventory;
+
+    if(bot.heldItem != null && bot.heldItem.name == 'fishing_rod'){
+        Do.log('[FishBot]Holding fishing rod');
+        return;
+    }
+    var fishingRod = bot.inventory.findItemRangeName(bot.inventory.inventoryStart, bot.inventory.inventoryEnd, 'fishing_rod');
+    if(fishingRod) { // have fishing rod
+        Do.log('[FishBot]Changing to fishing rod');
+        await bot.moveSlotItem(fishingRod.slot , bot.inventory.hotbarStart + bot.quickBarSlot);
+    } else { // no fishing rod
+        Do.log('[FishBot]Warning! No fishing rod in inventory')
+    }
+
+    if(bot.heldItem != null && bot.heldItem.name == 'fishing_rod'){
+        Do.log('[FishBot]Having changed item to fishing rod')
+    } else {
+        Do.log('[FishBot]Someting went wrong when changing the fishing rod')
     }
 });
-bot.on('held_item_slot', function(packet){
-    Player.heldItemIndex = packet.slot + 36;
-});
 
-bot.on('login', function(packet) {
+
+bot.on('login', function() {
     Do.log('[FishBot]Joined in the game');
     setTimeout(() => {
         bot.activateItem();
@@ -111,25 +95,15 @@ bot.on('health', function () {
             Do.log("HP is recovering");
         }
         else{
-            process.exit(0);//血量小于10但没在恢复 退出
+            process.exit(0);//health < 10 and not recovering
         }
         if (bot.health < 5){
-            process.exit(0);//血量小于5 过于危险 退出
+            process.exit(0);//health < 5 dangerous
         }
     }
-    
+    Do.log('Health Update.');
   });
 
- bot.on('kick_disconnect', function (packet) {
-    Do.log('Kicked for ' + packet.reason);
-    process.exit(1);
- });
-  
-  
- bot.on('disconnect', function (packet) {
-    Do.log('disconnected: ' + packet.reason)
-    process.exit(1);
- });
   
  bot.on('end', function () {
     Do.log('Connection lost')
