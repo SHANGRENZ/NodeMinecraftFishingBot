@@ -1,11 +1,12 @@
 //encoding utf-8
-//todo : eat food
+
 var mc = require('minecraft-protocol');
 const { threadId } = require('worker_threads');
 var config = require('./config');
 
 var firstLogin = true;
 var loginHealth = 0;
+var haveChangedFishingRod = false;
 
 var xpLevel = 0;
 var health = 20;
@@ -46,36 +47,39 @@ client.on('sound_effect', function(packet) {
     }
 });  
 client.on('window_items', function(packet) {
-    try {
-        if(packet.items[Player.heldItemIndex].itemId == 797){ //1.15.2为622
-            Do.log('[FishBot]Holding fishing rod');
-            return;
-        }else{
+    if(haveChangedFishingRod == false){
+        try {
+            if(packet.items[Player.heldItemIndex].itemId == 797){ //1.15.2为622
+                Do.log('[FishBot]Holding fishing rod');
+                haveChangedFishingRod = true;
+                return;
+            }else{
+                Do.log('[FishBot]Changing to fishing rod');
+            }
+        } catch (error) {
             Do.log('[FishBot]Changing to fishing rod');
         }
-    } catch (error) {
-        Do.log('[FishBot]Changing to fishing rod');
-    }
-    var haveFishrod = false;
-    packet.items.every(function(item, index){
-        if(item.present != false){
-            if(item.itemId == 797){
-                client.write('window_click', {
-                    windowId: packet.windowId,
-                    slot: index,
-                    mouseButton: 0,
-                    action: 1,
-                    mode: 2,
-                    item
-                });
-                haveFishrod = true;
-                return false;//break
+        var haveFishrod = false;
+        packet.items.every(function(item, index){
+            if(item.present != false){
+                if(item.itemId == 797){
+                    client.write('window_click', {
+                        windowId: packet.windowId,
+                        slot: index,
+                        mouseButton: 0,
+                        action: 1,
+                        mode: 2,
+                        item
+                    });
+                    haveFishrod = true;
+                    return false;//break
+                }
             }
-        }
-        return true;
-    });
-    if(!haveFishrod) Do.log('[FishBot]Warning! No fishing rod in inventory');
-    if(haveFishrod) Do.log('[FishBot]Having changed item to fishing rod');
+            return true;
+        });
+        haveFishrod ? Do.log('[FishBot]Having changed item to fishing rod') : Do.log('[FishBot]Warning! No fishing rod in inventory');
+        haveChangedFishingRod = true;
+    }
 });
 client.on('held_item_slot', function(packet){
     Player.heldItemIndex = packet.slot + 36;
