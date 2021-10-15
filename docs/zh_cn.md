@@ -14,4 +14,4 @@
 
 ## 三、感谢
 
-[node-minecraft-protocol](https://github.com/PrismarineJS/node-minecraft-protocol)
+[mineflayer](https://github.com/PrismarineJS/mineflayer)
