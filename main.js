@@ -4,6 +4,39 @@ var firstLogin = true;
 var loginHealth = 0;
 
 
+class Do {
+    static getDistance(x1, y1, z1, x2, y2, z2) {
+        return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1) + (z2 - z1) * (z2 - z1));
+    }
+    static getDistanceByVec3(v1,v2) {
+        return this.getDistance(v1.x,v1.y,v1.z,v2.x,v2.y,v2.z);
+    }
+	
+	static getTime() {
+        var now = new Date();
+		return '[' + now.getFullYear() + '/' + ( now.getMonth() + 1 ) + '/' + now.getDay() + ' ' + ("0" + now.getHours()).slice(-2) + ':' + ("0" + now.getMinutes()).slice(-2) + ':' + ("0" + now.getSeconds()).slice(-2) + '] ';
+	}
+    static getXpLevel() {
+        return '[XpLevel:' + bot.experience.level +']';
+    }
+    static getHealthInf() {
+        return '[Health:' + (bot.health || 0).toFixed(0) + ',Food:'+ (bot.food || 0).toFixed(0) + ',FoodSat:' + (bot.foodSaturation || 0).toFixed(0) + ']';
+    }
+    static log(log){
+        console.log(Do.getTime() + Do.getXpLevel() + Do.getHealthInf() + log);
+    }
+}
+
+class Player {
+    static heldItemIndex = 0;
+    static fishrod_x = 0;
+    static fishrod_y = 0;
+    static fishrod_z = 0;
+    static throw_time = 0;
+    static playerBobberEntity = undefined;
+
+    static timer;
+}
 const bot = mineflayer.createBot({
     host: config.server_host,
     port: config.server_port,
@@ -18,32 +51,28 @@ function init(){
 
 bot.once('spawn',init());
 */
-
-bot.on('hardcodedSoundEffectHeard', function(soundId, soundCategory, position, volume, pitch) {   
-    if(soundId == 369){//咬钩
-		var sound_distance = (Do.getDistance(position.x, position.y, position.z, Player.fishrod_x, Player.fishrod_y, Player.fishrod_z) / 8).toFixed(2);
-		Do.log('[FishBot]Sound Distance: ' + sound_distance);
-        if(sound_distance <= config.fishrod_distance){
+bot.on('entitySpawn', function(entity){
+    if(entity.mobType == 'Fishing Bobber'){
+        if(Do.getDistanceByVec3(entity.position,bot.player.entity.position) < config.bobberDistance){//close to player
+            Player.playerBobberEntity = entity;
+        }  
+    }
+        
+});
+bot.on('entityUpdate',function(entity){
+    if(!entity || Player.playerBobberEntity == undefined) return;
+    if (entity.uuid == Player.playerBobberEntity.uuid){
+        if(entity.velocity.y < config.bobberYVelocity){
             bot.activateItem();
             Do.log('[FishBot]Hooked!');
             setTimeout(() => {
                 bot.activateItem();
                 Player.throw_time = new Date().getTime();
             }, 2000);
-        }else{
-            Do.log('[FishBot]Far Fishing Sound');
         }
     }
-    if(soundId == 173){//入水
-        var tnow = new Date().getTime();
-        if(tnow > Player.throw_time && tnow - Player.throw_time <= config.afterthrow_timeout){//浮标入水后会持续产生入水音效 设置超时以避免重复计入
-			Do.log('[FishBot]Bobber in water');
-            Player.fishrod_x = position.x;
-            Player.fishrod_y = position.y;
-            Player.fishrod_z = position.z;
-        }
-    }
-}); 
+});
+
 bot.once('spawn', async function() {
     var window = bot.inventory;
 
@@ -104,45 +133,11 @@ bot.on('health', function () {
     Do.log('Health Update.');
   });
 
-  
- bot.on('end', function () {
-    Do.log('Connection lost')
-    process.exit(1);
- });
-  
- bot.on('error', function (err) {
+bot.on('kicked',Do.log);
+bot.on('end',Do.log); 
+bot.on('error', function (err) {
     Do.log('ERROR OCCURED,EXITING');
     Do.log(err);
     process.exit(1);
- });
+});
 
-
-class Do {
-    static getDistance(x1, y1, z1, x2, y2, z2) {
-        return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1) + (z2 - z1) * (z2 - z1));
-    }
-	
-	static getTime() {
-        var now = new Date();
-		return '[' + now.getFullYear() + '/' + ( now.getMonth() + 1 ) + '/' + now.getDay() + ' ' + ("0" + now.getHours()).slice(-2) + ':' + ("0" + now.getMinutes()).slice(-2) + ':' + ("0" + now.getSeconds()).slice(-2) + '] ';
-	}
-    static getXpLevel() {
-        return '[XpLevel:' + bot.experience.level +']';
-    }
-    static getHealthInf() {
-        return '[Health:' + (bot.health || 0).toFixed(0) + ',Food:'+ (bot.food || 0).toFixed(0) + ',FoodSat:' + (bot.foodSaturation || 0).toFixed(0) + ']';
-    }
-    static log(log){
-        console.log(Do.getTime() + Do.getXpLevel() + Do.getHealthInf() + log);
-    }
-}
-
-class Player {
-    static heldItemIndex = 0;
-    static fishrod_x = 0;
-    static fishrod_y = 0;
-    static fishrod_z = 0;
-    static throw_time = 0;
-
-    static timer;
-}
