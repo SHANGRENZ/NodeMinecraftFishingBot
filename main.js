@@ -14,7 +14,7 @@ class Do {
 	
 	static getTime() {
         var now = new Date();
-		return '[' + now.getFullYear() + '/' + ( now.getMonth() + 1 ) + '/' + now.getDay() + ' ' + ("0" + now.getHours()).slice(-2) + ':' + ("0" + now.getMinutes()).slice(-2) + ':' + ("0" + now.getSeconds()).slice(-2) + '] ';
+		return '[' + now.getFullYear() + '/' + ( now.getMonth() + 1 ) + '/' + now.getDate() + ' ' + ("0" + now.getHours()).slice(-2) + ':' + ("0" + now.getMinutes()).slice(-2) + ':' + ("0" + now.getSeconds()).slice(-2) + '] ';
 	}
     static getXpLevel() {
         return '[XpLevel:' + bot.experience.level +']';
@@ -133,8 +133,14 @@ bot.on('health', function () {
     Do.log('Health Update.');
   });
 
-bot.on('kicked',Do.log);
-bot.on('end',Do.log); 
+bot.on('kicked',function(err){
+    Do.log(err);
+    process.exit(-1);
+});
+bot.on('end',function(err){
+    Do.log(err);
+    process.exit(-2);
+}); 
 bot.on('error', function (err) {
     Do.log('ERROR OCCURED,EXITING');
     Do.log(err);
