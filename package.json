@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "minecraft-data": "^2.111.0",
+    "minecraft-data": "^2.112.0",
     "mineflayer": "^3.15.0",
     "prismarine-windows": "^2.4.3"
   }
